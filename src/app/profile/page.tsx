@@ -47,7 +47,7 @@ export default function ProfilePage() {
   const earnedIds = new Set(profile.achievements.map((a) => a.id));
 
   return (
-    <div className="max-w-lg mx-auto px-4 pb-12">
+    <div className="page-container">
       <div className="flex items-center justify-between pt-6 pb-2">
         <motion.h1
           initial={{ opacity: 0, y: -8 }}
