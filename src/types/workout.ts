@@ -29,16 +29,35 @@ export interface Workout {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CompletedSet {
+  exerciseId: string;
+  setNumber: number;
+  reps: number;
+  weight: number;
+}
+
+export interface CompletedExercise {
+  exerciseId: string;
+  exerciseName: string;
+  sets: CompletedSet[];
+}
+
 export interface CompletedWorkout {
   id: string;
-  workoutId: string;
   name: string;
-  exercises: WorkoutExercise[];
-  startTime: string;
-  endTime: string;
-  durationSeconds: number;
+  exercises: CompletedExercise[];
   totalVolume: number;
-  personalRecords: PersonalRecord[];
+  durationMinutes: number;
+  completedAt: string;
+}
+
+export interface WeeklyStats {
+  totalVolume: number;
+  workoutsCompleted: number;
+  totalMinutes: number;
+  previousVolume: number;
+  previousWorkouts: number;
 }
 
 export interface PersonalRecord {
