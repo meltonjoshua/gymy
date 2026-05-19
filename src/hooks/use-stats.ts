@@ -37,7 +37,7 @@ export function useStats(workouts: CompletedWorkout[]) {
     days.forEach((d) => volumeByDay.set(d, 0));
 
     workouts.forEach((w) => {
-      const d = new Date(w.completedAt);
+      const d = new Date(w.startTime);
       if (d >= startOfWeek) {
         const dayIndex = d.getDay();
         const dayName = days[dayIndex === 0 ? 6 : dayIndex - 1]!;
@@ -54,7 +54,7 @@ export function useStats(workouts: CompletedWorkout[]) {
     const counts: number[] = [0, 0, 0, 0, 0, 0, 0];
 
     workouts.forEach((w) => {
-      const jsDay = new Date(w.completedAt).getDay();
+      const jsDay = new Date(w.startTime).getDay();
       const idx = dayIndexMap[jsDay] ?? 0;
       counts[idx] = (counts[idx] ?? 0) + 1;
     });
@@ -66,7 +66,8 @@ export function useStats(workouts: CompletedWorkout[]) {
     const countMap = new Map<string, number>();
     workouts.forEach((w) => {
       w.exercises.forEach((ex) => {
-        countMap.set(ex.exerciseName, (countMap.get(ex.exerciseName) ?? 0) + 1);
+        const name = (ex as unknown as { exerciseName?: string }).exerciseName ?? ex.exerciseId;
+        countMap.set(name, (countMap.get(name) ?? 0) + 1);
       });
     });
 
@@ -80,18 +81,16 @@ export function useStats(workouts: CompletedWorkout[]) {
     const monthPRs = new Map<string, number>();
 
     workouts.forEach((w) => {
-      const month = w.completedAt.substring(0, 7);
-      w.exercises.forEach((ex) => {
-        ex.sets.forEach((set) => {
-          const key = ex.exerciseId;
-          const prev = prMap.get(key);
-          if (!prev || set.weight > prev.weight) {
-            if (prev !== undefined) {
-              monthPRs.set(month, (monthPRs.get(month) ?? 0) + 1);
-            }
-            prMap.set(key, { weight: set.weight, reps: set.reps });
+      const month = w.startTime.substring(0, 7);
+      w.personalRecords.forEach((pr) => {
+        const key = pr.exerciseId;
+        const prev = prMap.get(key);
+        if (!prev || pr.weight > prev.weight) {
+          if (prev !== undefined) {
+            monthPRs.set(month, (monthPRs.get(month) ?? 0) + 1);
           }
-        });
+          prMap.set(key, { weight: pr.weight, reps: pr.reps });
+        }
       });
     });
 

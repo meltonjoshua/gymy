@@ -56,7 +56,7 @@ export function RecentWorkoutList({ workouts }: RecentWorkoutListProps) {
               <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {w.durationMinutes}m
+                  {Math.round(w.durationSeconds / 60)}m
                 </span>
                 <span className="flex items-center gap-1">
                   <Weight className="w-3 h-3" />
@@ -69,7 +69,7 @@ export function RecentWorkoutList({ workouts }: RecentWorkoutListProps) {
               </div>
             </div>
             <span className="text-xs text-gray-500 ml-3 whitespace-nowrap">
-              {formatRelativeTime(w.completedAt)}
+              {formatRelativeTime(w.startTime)}
             </span>
           </div>
         ))}

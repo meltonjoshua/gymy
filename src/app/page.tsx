@@ -1,13 +1,11 @@
 'use client';
 
 import { useWorkoutHistory } from '@/hooks/use-workout-history';
-import { useStats } from '@/hooks/use-stats';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { StreakCounter } from '@/components/dashboard/StreakCounter';
 import { WeeklyChart } from '@/components/dashboard/WeeklyChart';
 import { RecentWorkoutList } from '@/components/dashboard/RecentWorkoutList';
 import { PersonalRecords } from '@/components/dashboard/PersonalRecords';
-import { ProgressRings } from '@/components/dashboard/ProgressRings';
 import { Dumbbell, Flame, Clock, Weight, Play, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -21,18 +19,16 @@ function getGreeting(): string {
   return 'Good night';
 }
 
-function getWorkoutGoalPercentage(): number {
-  return 0;
-}
-
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
 };
 
 export default function Home() {
-  const { workouts, weeklyStats, currentStreak, personalRecords } = useWorkoutHistory();
-  const { weeklyVolumeData } = useStats(workouts);
+  const { workouts, getWeeklyStats, getCurrentStreak, getPersonalRecords } = useWorkoutHistory();
+  const weeklyStats = getWeeklyStats();
+  const currentStreak = getCurrentStreak();
+  const personalRecords = getPersonalRecords();
 
   const volumeTrend: 'up' | 'down' | 'neutral' =
     weeklyStats.totalVolume > weeklyStats.previousVolume
@@ -58,7 +54,26 @@ export default function Home() {
       ? `${weeklyStats.workoutsCompleted - weeklyStats.previousWorkouts} vs last wk`
       : undefined;
 
-  const goalPct = getWorkoutGoalPercentage();
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const weeklyVolumeData = dayNames.map((day) => ({ day, volume: 0 }));
+  const now = new Date();
+  const weekStart = new Date(now);
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  weekStart.setDate(diff);
+  weekStart.setHours(0, 0, 0, 0);
+  const weekStartStr = weekStart.toISOString();
+  workouts.forEach((w) => {
+    if (w.startTime >= weekStartStr) {
+      const d = new Date(w.startTime);
+      const jsDay = d.getDay();
+      const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
+      weeklyVolumeData[dayIndex] = {
+        ...weeklyVolumeData[dayIndex]!,
+        volume: weeklyVolumeData[dayIndex]!.volume + w.totalVolume,
+      };
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 pb-8">
@@ -132,17 +147,6 @@ export default function Home() {
           <WeeklyChart data={weeklyVolumeData} />
         </motion.div>
 
-        <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.25 }} className="mb-6">
-          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
-            <h3 className="text-sm font-semibold text-gray-300 mb-4 uppercase tracking-wider">
-              Weekly Goal
-            </h3>
-            <div className="flex justify-center">
-              <ProgressRings percentage={goalPct} label="Workouts / Week" />
-            </div>
-          </div>
-        </motion.div>
-
         <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.3 }} className="mb-6">
           <RecentWorkoutList workouts={workouts} />
         </motion.div>
@@ -153,11 +157,11 @@ export default function Home() {
 
         <motion.div {...fadeUp} transition={{ duration: 0.4, delay: 0.4 }} className="mt-6">
           <Link
-            href="/dashboard"
+            href="/analytics"
             className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] text-gray-400 text-sm font-medium hover:bg-white/[0.08] hover:text-gray-300 transition-all"
           >
             <Flame className="w-4 h-4" />
-            View Full Dashboard
+            View Full Analytics
           </Link>
         </motion.div>
       </div>

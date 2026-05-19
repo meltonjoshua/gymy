@@ -66,7 +66,10 @@ const fadeUp = {
 };
 
 export default function DashboardPage() {
-  const { workouts, weeklyStats, currentStreak, personalRecords } = useWorkoutHistory();
+  const { workouts, getWeeklyStats, getCurrentStreak, getPersonalRecords } = useWorkoutHistory();
+  const weeklyStats = getWeeklyStats();
+  const currentStreak = getCurrentStreak();
+  const personalRecords = getPersonalRecords();
   const { weeklyVolumeData, frequencyData, mostUsedExercises } = useStats(workouts);
 
   const volumeTrend: 'up' | 'down' | 'neutral' =

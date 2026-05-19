@@ -30,26 +30,25 @@ export interface Workout {
   updatedAt: string;
 }
 
-export interface CompletedSet {
-  exerciseId: string;
-  setNumber: number;
-  reps: number;
-  weight: number;
-}
-
-export interface CompletedExercise {
-  exerciseId: string;
-  exerciseName: string;
-  sets: CompletedSet[];
-}
-
 export interface CompletedWorkout {
   id: string;
+  workoutId: string;
   name: string;
-  exercises: CompletedExercise[];
+  exercises: WorkoutExercise[];
+  startTime: string;
+  endTime: string;
+  durationSeconds: number;
   totalVolume: number;
-  durationMinutes: number;
-  completedAt: string;
+  personalRecords: PersonalRecord[];
+}
+
+export interface PersonalRecord {
+  exerciseId: string;
+  exerciseName: string;
+  weight: number;
+  reps: number;
+  estimated1RM: number;
+  date: string;
 }
 
 export interface WeeklyStats {
@@ -58,12 +57,4 @@ export interface WeeklyStats {
   totalMinutes: number;
   previousVolume: number;
   previousWorkouts: number;
-}
-
-export interface PersonalRecord {
-  exerciseId: string;
-  exerciseName: string;
-  weight: number;
-  reps: number;
-  date: string;
 }
