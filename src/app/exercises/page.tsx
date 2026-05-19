@@ -123,74 +123,72 @@ export default function ExercisesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-100">Exercise Library</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {filteredExercises.length} exercise{filteredExercises.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <button
-            onClick={() => setShowMuscleMap(!showMuscleMap)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl transition-all ${
-              showMuscleMap || activeMuscleGroup
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                : 'bg-gray-800 text-gray-400 border border-gray-700/50 hover:border-gray-600 hover:text-gray-300'
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            Muscle Map
-          </button>
+    <div className="page-container">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-100">Exercise Library</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {filteredExercises.length} exercise{filteredExercises.length !== 1 ? 's' : ''}
+          </p>
         </div>
+        <button
+          onClick={() => setShowMuscleMap(!showMuscleMap)}
+          className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl transition-all ${
+            showMuscleMap || activeMuscleGroup
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+              : 'bg-gray-800 text-gray-400 border border-gray-700/50 hover:border-gray-600 hover:text-gray-300'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+          Muscle Map
+        </button>
+      </div>
 
-        <div className="space-y-4">
-          <ExerciseSearchBar onSearch={setSearchQuery} />
+      <div className="space-y-4">
+        <ExerciseSearchBar onSearch={setSearchQuery} />
 
-          {showMuscleMap && (
-            <div className="bg-gray-800/40 border border-gray-700/40 rounded-xl p-4 backdrop-blur-sm">
-              <MuscleMap
-                onMuscleSelect={handleMuscleMapSelect}
-                activeMuscle={
-                  activeMuscleGroup
-                    ? (Object.entries(MUSCLE_MAP_REGIONS).find(
-                        ([, v]) => v === activeMuscleGroup
-                      )?.[0] ?? null)
-                    : null
-                }
-              />
-            </div>
-          )}
-
-          <ExerciseFilters
-            selectedCategory={selectedCategory}
-            onCategoryChange={handleCategoryChange}
-            selectedEquipment={selectedEquipment}
-            onEquipmentChange={setSelectedEquipment}
-            selectedDifficulty={selectedDifficulty}
-            onDifficultyChange={setSelectedDifficulty}
-            activeMuscleGroup={activeMuscleGroup}
-            onMuscleGroupChange={(muscle) => {
-              setActiveMuscleGroup(muscle);
-              if (muscle) {
-                const category = MUSCLE_TO_CATEGORY[muscle];
-                if (category) {
-                  setSelectedCategory(category);
-                }
+        {showMuscleMap && (
+          <div className="bg-gray-800/40 border border-gray-700/40 rounded-xl p-4 backdrop-blur-sm">
+            <MuscleMap
+              onMuscleSelect={handleMuscleMapSelect}
+              activeMuscle={
+                activeMuscleGroup
+                  ? (Object.entries(MUSCLE_MAP_REGIONS).find(
+                      ([, v]) => v === activeMuscleGroup
+                    )?.[0] ?? null)
+                  : null
               }
-            }}
-          />
+            />
+          </div>
+        )}
 
-          <ExerciseGrid exercises={filteredExercises} />
-        </div>
+        <ExerciseFilters
+          selectedCategory={selectedCategory}
+          onCategoryChange={handleCategoryChange}
+          selectedEquipment={selectedEquipment}
+          onEquipmentChange={setSelectedEquipment}
+          selectedDifficulty={selectedDifficulty}
+          onDifficultyChange={setSelectedDifficulty}
+          activeMuscleGroup={activeMuscleGroup}
+          onMuscleGroupChange={(muscle) => {
+            setActiveMuscleGroup(muscle);
+            if (muscle) {
+              const category = MUSCLE_TO_CATEGORY[muscle];
+              if (category) {
+                setSelectedCategory(category);
+              }
+            }
+          }}
+        />
+
+        <ExerciseGrid exercises={filteredExercises} />
       </div>
     </div>
   );
