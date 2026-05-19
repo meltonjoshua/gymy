@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { Exercise, ExerciseDifficulty } from '@/types/exercise';
 
 const DIFFICULTY_CONFIG: Record<
@@ -47,7 +48,11 @@ export default function ExerciseCard({ exercise, onQuickAdd }: ExerciseCardProps
 
   return (
     <Link href={`/exercises/${exercise.id}`} className="group block">
-      <div className="relative bg-gray-800/60 border border-gray-700/50 rounded-xl p-4 hover:border-emerald-500/30 hover:bg-gray-800/80 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/5 cursor-pointer">
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="relative bg-gray-800/60 border border-gray-700/50 rounded-xl p-4 hover:border-emerald-500/30 hover:bg-gray-800/80 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/5 cursor-pointer"
+      >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-semibold text-gray-100 group-hover:text-emerald-400 transition-colors truncate">
@@ -115,7 +120,7 @@ export default function ExerciseCard({ exercise, onQuickAdd }: ExerciseCardProps
             </>
           )}
         </div>
-      </div>
+      </motion.div>
     </Link>
   );
 }
