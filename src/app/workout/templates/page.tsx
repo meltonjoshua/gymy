@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Play, Clock, Dumbbell, Plus, Trash2 } from 'lucide-react';
@@ -12,20 +12,36 @@ interface WorkoutTemplate {
   createdAt: string;
 }
 
+const STORAGE_KEY = 'gymy_templates';
+
+function loadTemplatesFromStorage(): WorkoutTemplate[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return [];
+}
+
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<WorkoutTemplate[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const stored = localStorage.getItem('gymy_templates');
-      if (stored) return JSON.parse(stored);
-    } catch {}
-    return [];
-  });
+  const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const stored = loadTemplatesFromStorage();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration pattern: reading localStorage into state on mount
+    setTemplates(stored);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
+    }
+  }, [templates, hydrated]);
 
   const deleteTemplate = (id: string) => {
-    const updated = templates.filter((t) => t.id !== id);
-    setTemplates(updated);
-    localStorage.setItem('gymy_templates', JSON.stringify(updated));
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
   };
 
   return (
@@ -39,7 +55,7 @@ export default function TemplatesPage() {
         <p className="text-sm text-gray-500 mt-1">Quick-start your favorite routines</p>
       </motion.div>
 
-      {templates.length === 0 ? (
+      {!hydrated ? null : templates.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   DndContext,
   closestCenter,
@@ -18,6 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { AnimatePresence } from 'framer-motion';
 import { useWorkoutBuilder } from '@/hooks/use-workout-builder';
+import { getExerciseById } from '@/lib/exercise-utils';
 import ExercisePicker from './ExercisePicker';
 import WorkoutExerciseCard from './WorkoutExerciseCard';
 import WorkoutSummary from './WorkoutSummary';
@@ -25,6 +27,27 @@ import WorkoutSummary from './WorkoutSummary';
 export default function WorkoutBuilder() {
   const builder = useWorkoutBuilder();
   const [showPicker, setShowPicker] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const templateId = searchParams.get('template');
+    if (!templateId || builder.exercises.length > 0) return;
+
+    try {
+      const stored = localStorage.getItem('gymy_templates');
+      if (!stored) return;
+      const templates = JSON.parse(stored);
+      const template = templates.find((t: { id: string }) => t.id === templateId);
+      if (!template) return;
+
+      builder.setName(template.name);
+      for (const ex of template.exercises) {
+        builder.addExercise(ex.exerciseId);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only run on mount / searchParams change
+  }, [searchParams]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -145,10 +168,22 @@ export default function WorkoutBuilder() {
               Reset
             </button>
             <button
+              onClick={() => {
+                const payload = builder.exercises.map((we) => {
+                  const exercise = getExerciseById(we.exerciseId);
+                  return {
+                    exerciseId: we.exerciseId,
+                    name: exercise?.name ?? we.exerciseId,
+                    sets: we.sets.map((s) => ({ weight: s.weight, reps: s.reps })),
+                  };
+                });
+                const encoded = encodeURIComponent(JSON.stringify(payload));
+                router.push(`/workout/active?data=${encoded}`);
+              }}
               className="flex-1 py-3 rounded-xl font-medium text-sm bg-emerald-500 text-gray-950 hover:bg-emerald-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!builder.isValid}
             >
-              Save Workout
+              Start Workout
             </button>
           </div>
         )}

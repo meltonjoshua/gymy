@@ -13,7 +13,7 @@ export default function SetCheckmark({ completed, onClick }: SetCheckmarkProps) 
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center justify-center w-8 h-8 rounded-lg border-2 transition-all min-w-[44px] min-h-[44px] ${
+      className={`flex items-center justify-center min-w-[44px] min-h-[44px] rounded-lg border-2 transition-all ${
         completed
           ? 'bg-emerald-500 border-emerald-500 text-white'
           : 'bg-transparent border-gray-600 text-transparent hover:border-emerald-500/50'

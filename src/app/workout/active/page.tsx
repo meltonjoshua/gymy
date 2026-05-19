@@ -6,6 +6,8 @@ import { SkipForward, Timer, Trophy } from 'lucide-react';
 import SetCheckmark from '@/components/ui/SetCheckmark';
 import { useConfetti } from '@/hooks/use-confetti';
 import { useSettings } from '@/hooks/use-settings';
+import { useWorkoutHistory } from '@/hooks/use-workout-history';
+import { getExerciseById } from '@/lib/exercise-utils';
 import Link from 'next/link';
 
 interface ActiveSet {
@@ -20,43 +22,77 @@ interface ActiveExercise {
   sets: ActiveSet[];
 }
 
-const DEMO_WORKOUT: ActiveExercise[] = [
-  {
-    exerciseId: 'bench-press',
-    name: 'Bench Press',
-    sets: [
-      { weight: 135, reps: 10, completed: false },
-      { weight: 155, reps: 8, completed: false },
-      { weight: 175, reps: 6, completed: false },
-    ],
-  },
-  {
-    exerciseId: 'squat',
-    name: 'Barbell Squat',
-    sets: [
-      { weight: 185, reps: 10, completed: false },
-      { weight: 205, reps: 8, completed: false },
-      { weight: 225, reps: 6, completed: false },
-    ],
-  },
-  {
-    exerciseId: 'deadlift',
-    name: 'Deadlift',
-    sets: [
-      { weight: 225, reps: 8, completed: false },
-      { weight: 275, reps: 5, completed: false },
-    ],
-  },
-];
+const STORAGE_KEY = 'gymy_active_workout';
+
+function loadActiveWorkout(): ActiveExercise[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return null;
+}
+
+function saveActiveWorkout(exercises: ActiveExercise[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(exercises));
+}
+
+function clearActiveWorkout(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(STORAGE_KEY);
+}
 
 export default function ActiveWorkoutPage() {
-  const [exercises, setExercises] = useState<ActiveExercise[]>(DEMO_WORKOUT);
+  const [exercises, setExercises] = useState<ActiveExercise[]>([]);
+  const [hydrated, setHydrated] = useState(false);
   const [restTimer, setRestTimer] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const { fire } = useConfetti();
   const { settings } = useSettings();
+  const { addWorkout } = useWorkoutHistory();
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- hydration: read localStorage/URL params into state on mount */
+    const saved = loadActiveWorkout();
+    if (saved && saved.length > 0) {
+      setExercises(saved);
+    } else {
+      const params = new URLSearchParams(window.location.search);
+      const workoutData = params.get('data');
+      if (workoutData) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(workoutData));
+          const activeExercises: ActiveExercise[] = parsed.map(
+            (e: {
+              exerciseId: string;
+              name?: string;
+              sets: { weight: number; reps: number }[];
+            }) => {
+              const exercise = getExerciseById(e.exerciseId);
+              return {
+                exerciseId: e.exerciseId,
+                name: e.name || exercise?.name || e.exerciseId,
+                sets: e.sets.map((s) => ({ ...s, completed: false })),
+              };
+            }
+          );
+          setExercises(activeExercises);
+          saveActiveWorkout(activeExercises);
+        } catch {}
+      }
+    }
+    setHydrated(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  useEffect(() => {
+    if (hydrated && exercises.length > 0) {
+      saveActiveWorkout(exercises);
+    }
+  }, [exercises, hydrated]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -102,12 +138,24 @@ export default function ActiveWorkoutPage() {
         if (allComplete) {
           setIsComplete(true);
           setTimeout(() => fire(), 300);
+
+          addWorkout({
+            name: 'Workout',
+            exercises: updated.map((ex) => ({
+              exerciseId: ex.exerciseId,
+              exerciseName: ex.name,
+              sets: ex.sets.map((s) => ({ reps: s.reps, weight: s.weight })),
+            })),
+            durationMinutes: Math.round(elapsedSeconds / 60) || 1,
+          });
+
+          clearActiveWorkout();
         }
 
         return updated;
       });
     },
-    [settings, fire]
+    [settings, fire, addWorkout, elapsedSeconds]
   );
 
   const skipRest = useCallback(() => {
@@ -124,10 +172,30 @@ export default function ActiveWorkoutPage() {
   const totalSets = exercises.reduce((a, e) => a + e.sets.length, 0);
   const completedSets = exercises.reduce((a, e) => a + e.sets.filter((s) => s.completed).length, 0);
 
-  if (exercises.length === 0) {
+  if (!hydrated) {
     return (
       <div className="page-container flex items-center justify-center min-h-[50vh]">
         <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (exercises.length === 0) {
+    return (
+      <div className="page-container">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card text-center py-12"
+        >
+          <p className="text-gray-400 text-sm font-medium mb-2">No active workout</p>
+          <p className="text-gray-600 text-xs mb-6">
+            Build a workout first, then start it from the builder or templates page
+          </p>
+          <Link href="/workout/builder" className="btn-primary inline-flex">
+            Build Workout
+          </Link>
+        </motion.div>
       </div>
     );
   }

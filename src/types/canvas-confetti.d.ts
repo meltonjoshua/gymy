@@ -5,6 +5,11 @@ declare module 'canvas-confetti' {
     origin?: { x?: number; y?: number };
     colors?: string[];
   }
-  function confetti(options?: Options): void;
+
+  interface Confetti {
+    (options?: Options): Promise<null>;
+  }
+
+  const confetti: Confetti;
   export default confetti;
 }

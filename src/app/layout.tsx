@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import TopBar from '@/components/layout/TopBar';
+import PageTransition from '@/components/layout/PageTransition';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -23,7 +24,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full bg-gray-950 text-gray-100 flex flex-col">
         <TopBar />
-        <main className="flex-1 pb-20 md:pb-8 overflow-x-hidden">{children}</main>
+        <main className="flex-1 pb-20 md:pb-8 overflow-x-hidden">
+          <PageTransition>{children}</PageTransition>
+        </main>
         <Navbar />
       </body>
     </html>
