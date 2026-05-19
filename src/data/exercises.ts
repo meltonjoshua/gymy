@@ -745,7 +745,7 @@ export const exercises: Exercise[] = [
     id: 'box-jump',
     name: 'Box Jump',
     category: 'cardio',
-    muscleGroups: ['legs', 'glutes', 'cardio'],
+    muscleGroups: ['quads', 'glutes', 'hamstrings', 'cardio'],
     equipment: 'bodyweight',
     difficulty: 'intermediate',
     instructions: [
@@ -1041,7 +1041,7 @@ export const exercises: Exercise[] = [
     id: 'sprint-intervals',
     name: 'Sprint Intervals',
     category: 'cardio',
-    muscleGroups: ['full body', 'cardio', 'legs'],
+    muscleGroups: ['full body', 'cardio', 'quads', 'hamstrings'],
     equipment: 'bodyweight',
     difficulty: 'advanced',
     instructions: [
@@ -1062,7 +1062,7 @@ export const exercises: Exercise[] = [
     id: 'row-machine',
     name: 'Rowing Machine Intervals',
     category: 'cardio',
-    muscleGroups: ['back', 'legs', 'cardio'],
+    muscleGroups: ['back', 'quads', 'hamstrings', 'cardio'],
     equipment: 'machine',
     difficulty: 'beginner',
     instructions: [
