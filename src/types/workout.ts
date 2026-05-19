@@ -29,7 +29,6 @@ export interface Workout {
   createdAt: string;
   updatedAt: string;
 }
-
 export interface CompletedWorkout {
   id: string;
   workoutId: string;
