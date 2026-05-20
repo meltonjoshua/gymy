@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { WorkoutExercise, CompletedWorkout, PersonalRecord } from '@/types/workout';
 import { calculateVolume, estimate1RM } from '@/lib/workout-utils';
 import { exercises } from '@/data/exercises';
@@ -9,8 +9,11 @@ export function useWorkoutSession() {
   const [sessionExercises, setSessionExercises] = useState<WorkoutExercise[]>([]);
   const [startTime, setStartTime] = useState<string>('');
   const [isComplete, setIsComplete] = useState(false);
+  const initCalledRef = useRef(false);
 
   const initSession = useCallback((workoutExercises: WorkoutExercise[]) => {
+    if (initCalledRef.current) return;
+    initCalledRef.current = true;
     const initialized = workoutExercises.map((e) => ({
       ...e,
       sets: e.sets.map((s) => ({ ...s, weight: 0, completed: false })),
