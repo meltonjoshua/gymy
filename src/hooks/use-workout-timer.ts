@@ -5,36 +5,53 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 export function useWorkoutTimer(defaultRestSeconds: number = 90, soundEnabled: boolean = true) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [restSeconds, setRestSeconds] = useState(0);
+  const [restTotalSeconds, setRestTotalSeconds] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [restComplete, setRestComplete] = useState(false);
   const elapsedInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const restInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  const getAudioContext = useCallback(() => {
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = new AudioContext();
+    }
+    return audioCtxRef.current;
+  }, []);
 
   const playBeep = useCallback(() => {
     if (!soundEnabled) return;
     try {
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      gain.gain.value = 0.3;
-      osc.start();
-      osc.stop(ctx.currentTime + 0.15);
-      setTimeout(() => {
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.frequency.value = 1100;
-        gain2.gain.value = 0.3;
-        osc2.start();
-        osc2.stop(ctx.currentTime + 0.2);
-      }, 200);
+      const ctx = getAudioContext();
+      if (ctx.state === 'suspended') ctx.resume();
+
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.frequency.value = 880;
+      gain1.gain.value = 0.3;
+      osc1.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 0.15);
+
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.frequency.value = 1100;
+      gain2.gain.value = 0.3;
+      osc2.start(ctx.currentTime + 0.2);
+      osc2.stop(ctx.currentTime + 0.4);
     } catch {}
-  }, [soundEnabled]);
+  }, [soundEnabled, getAudioContext]);
+
+  const vibrate = useCallback(() => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate([200, 100, 200]);
+    }
+  }, []);
 
   const startWorkout = useCallback(() => {
     setIsRunning(true);
@@ -45,12 +62,16 @@ export function useWorkoutTimer(defaultRestSeconds: number = 90, soundEnabled: b
   const startRest = useCallback((seconds?: number) => {
     const rest = seconds ?? defaultRestSeconds;
     setRestSeconds(rest);
+    setRestTotalSeconds(rest);
     setIsResting(true);
+    setRestComplete(false);
   }, [defaultRestSeconds]);
 
   const skipRest = useCallback(() => {
     setIsResting(false);
     setRestSeconds(0);
+    setRestTotalSeconds(0);
+    setRestComplete(true);
   }, []);
 
   const pause = useCallback(() => {
@@ -66,6 +87,7 @@ export function useWorkoutTimer(defaultRestSeconds: number = 90, soundEnabled: b
     setIsResting(false);
     setIsPaused(false);
     setRestSeconds(0);
+    setRestTotalSeconds(0);
   }, []);
 
   useEffect(() => {
@@ -79,12 +101,15 @@ export function useWorkoutTimer(defaultRestSeconds: number = 90, soundEnabled: b
     };
   }, [isRunning, isPaused]);
 
+  const isRestingAndNotPaused = isResting && !isPaused;
+
   useEffect(() => {
-    if (isResting && !isPaused && restSeconds > 0) {
+    if (isRestingAndNotPaused) {
       restInterval.current = setInterval(() => {
         setRestSeconds((s) => {
           if (s <= 1) {
             setIsResting(false);
+            setRestComplete(true);
             return 0;
           }
           return s - 1;
@@ -94,25 +119,33 @@ export function useWorkoutTimer(defaultRestSeconds: number = 90, soundEnabled: b
     return () => {
       if (restInterval.current) clearInterval(restInterval.current);
     };
-  }, [isResting, isPaused, restSeconds]);
+  }, [isRestingAndNotPaused]);
 
   useEffect(() => {
-    if (restSeconds === 0 && isResting) {
+    if (restComplete) {
       playBeep();
+      vibrate();
     }
-  }, [restSeconds, isResting, playBeep]);
+  }, [restComplete, playBeep, vibrate]);
+
+  const clearRestComplete = useCallback(() => {
+    setRestComplete(false);
+  }, []);
 
   return {
     elapsedSeconds,
     restSeconds,
+    restTotalSeconds,
     isResting,
     isPaused,
     isRunning,
+    restComplete,
     startWorkout,
     startRest,
     skipRest,
     pause,
     resume,
     stopWorkout,
+    clearRestComplete,
   };
 }
