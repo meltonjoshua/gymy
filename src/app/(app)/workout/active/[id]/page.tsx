@@ -16,7 +16,7 @@ import Link from 'next/link';
 export default function ActiveWorkoutPage() {
   const router = useRouter();
   const { settings } = useSettings();
-  const timer = useWorkoutTimer(settings.defaultRestTimer, settings.soundEffects);
+  const timer = useWorkoutTimer(settings.defaultRestTimerDuration, settings.soundEffects);
   const session = useWorkoutSession();
   const history = useWorkoutHistory();
   const [workout, setWorkout] = useState<Workout | null>(null);
@@ -39,7 +39,10 @@ export default function ActiveWorkoutPage() {
     return (
       <div className="px-4 py-12 text-center text-zinc-500">
         <p>No active workout</p>
-        <Link href="/workout/builder" className="text-emerald-400 hover:underline mt-2 inline-block">
+        <Link
+          href="/workout/builder"
+          className="text-emerald-400 hover:underline mt-2 inline-block"
+        >
           Create a workout
         </Link>
       </div>
@@ -54,7 +57,12 @@ export default function ActiveWorkoutPage() {
     const currentSet = currentEx.sets[currentSetIndex];
     if (!currentSet) return;
     const exData = exercises.find((e) => e.id === currentEx.exerciseId);
-    session.completeSet(currentEx.id, currentSet.id, currentSet.weight || 0, currentSet.reps || exData?.defaultReps || 0);
+    session.completeSet(
+      currentEx.id,
+      currentSet.id,
+      currentSet.weight || 0,
+      currentSet.reps || exData?.defaultReps || 0
+    );
     if (settings.autoStartRestTimer && currentEx.restSeconds > 0) {
       timer.startRest(currentEx.restSeconds);
     }
@@ -86,20 +94,28 @@ export default function ActiveWorkoutPage() {
     } else if (currentExerciseIndex > 0) {
       const prevIdx = currentExerciseIndex - 1;
       setCurrentExerciseIndex(prevIdx);
-      setCurrentSetIndex(session.sessionExercises[prevIdx].sets.length - 1);
+      const prevExercise = session.sessionExercises[prevIdx];
+      setCurrentSetIndex(prevExercise ? prevExercise.sets.length - 1 : 0);
     }
   };
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <button onClick={() => { timer.stopWorkout(); router.back(); }} className="p-2 text-zinc-400 hover:text-white">
+        <button
+          onClick={() => {
+            timer.stopWorkout();
+            router.back();
+          }}
+          className="p-2 text-zinc-400 hover:text-white"
+        >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="text-center">
           <h1 className="text-lg font-bold text-white">{workout.name}</h1>
           <p className="text-xs text-zinc-500">
-            {Math.floor(timer.elapsedSeconds / 60)}:{(timer.elapsedSeconds % 60).toString().padStart(2, '0')} elapsed
+            {Math.floor(timer.elapsedSeconds / 60)}:
+            {(timer.elapsedSeconds % 60).toString().padStart(2, '0')} elapsed
           </p>
         </div>
         <button
@@ -138,16 +154,26 @@ export default function ActiveWorkoutPage() {
                 return (
                   <div
                     key={set.id}
-                    onClick={() => { setCurrentSetIndex(si); }}
+                    onClick={() => {
+                      setCurrentSetIndex(si);
+                    }}
                     className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
-                      isCurrent ? 'bg-emerald-500/10 border border-emerald-500/30' : set.completed ? 'bg-zinc-800/50' : 'bg-zinc-800'
+                      isCurrent
+                        ? 'bg-emerald-500/10 border border-emerald-500/30'
+                        : set.completed
+                          ? 'bg-zinc-800/50'
+                          : 'bg-zinc-800'
                     }`}
                   >
                     <span className="text-xs text-zinc-400">Set {set.setNumber}</span>
                     {set.completed ? (
-                      <span className="text-xs text-emerald-400">✓ {set.weight}kg × {set.reps}</span>
+                      <span className="text-xs text-emerald-400">
+                        ✓ {set.weight}kg × {set.reps}
+                      </span>
                     ) : (
-                      <span className="text-xs text-zinc-500">{currentExData.defaultReps} reps</span>
+                      <span className="text-xs text-zinc-500">
+                        {currentExData.defaultReps} reps
+                      </span>
                     )}
                   </div>
                 );

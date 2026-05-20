@@ -5,18 +5,16 @@ import { useBodyStats } from '@/hooks/use-body-stats';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 export default function BodyStatsPage() {
-  const { measurements, addMeasurement, getWeightTrend } = useBodyStats();
+  const { stats, addMeasurement, weightChartData } = useBodyStats();
   const [weight, setWeight] = useState('');
   const [bodyFat, setBodyFat] = useState('');
-
-  const trend = getWeightTrend();
 
   const handleAdd = () => {
     if (!weight) return;
     addMeasurement({
       date: new Date().toISOString(),
       weight: Number(weight),
-      bodyFatPercentage: bodyFat ? Number(bodyFat) : undefined,
+      bodyFat: bodyFat ? Number(bodyFat) : 0,
     });
     setWeight('');
     setBodyFat('');
@@ -53,16 +51,22 @@ export default function BodyStatsPage() {
         </button>
       </div>
 
-      {trend.dates.length > 1 && (
+      {weightChartData.length > 1 && (
         <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-4">
           <h3 className="text-sm font-semibold text-white mb-4">Weight Trend</h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trend.dates.map((d: string, i: number) => ({ date: d, weight: trend.weights[i] }))}>
+              <LineChart data={weightChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                 <XAxis dataKey="date" stroke="#71717a" fontSize={12} />
                 <YAxis stroke="#71717a" fontSize={12} />
-                <Line type="monotone" dataKey="weight" stroke="#10b981" strokeWidth={2} dot={false} />
+                <Line
+                  type="monotone"
+                  dataKey="weight"
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -72,16 +76,21 @@ export default function BodyStatsPage() {
       <div>
         <h3 className="text-sm font-semibold text-white mb-3">Recent Measurements</h3>
         <div className="space-y-2">
-          {measurements.slice(0, 10).map((m) => (
-            <div key={m.id} className="bg-zinc-900 rounded-xl border border-zinc-800 p-3 flex items-center justify-between">
+          {stats.slice(0, 10).map((m) => (
+            <div
+              key={m.id}
+              className="bg-zinc-900 rounded-xl border border-zinc-800 p-3 flex items-center justify-between"
+            >
               <div>
                 <div className="text-sm text-white">{m.weight} kg</div>
-                {m.bodyFatPercentage && <div className="text-xs text-zinc-500">{m.bodyFatPercentage}% body fat</div>}
+                {m.bodyFat > 0 && (
+                  <div className="text-xs text-zinc-500">{m.bodyFat}% body fat</div>
+                )}
               </div>
               <div className="text-xs text-zinc-500">{new Date(m.date).toLocaleDateString()}</div>
             </div>
           ))}
-          {measurements.length === 0 && (
+          {stats.length === 0 && (
             <p className="text-center text-zinc-500 text-sm py-4">No measurements yet</p>
           )}
         </div>

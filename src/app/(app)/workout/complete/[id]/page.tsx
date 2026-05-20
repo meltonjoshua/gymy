@@ -11,7 +11,7 @@ export default function WorkoutCompletePage() {
     if (typeof window === 'undefined') return null;
     const stored = sessionStorage.getItem('gymy_completed_workout');
     if (stored) {
-      return JSON.parse(stored);
+      return JSON.parse(stored) as CompletedWorkout;
     }
     return null;
   });
@@ -27,10 +27,13 @@ export default function WorkoutCompletePage() {
   return (
     <WorkoutComplete
       name={completed.name}
-      durationSeconds={completed.durationSeconds}
+      durationSeconds={completed.durationMinutes * 60}
       totalVolume={completed.totalVolume}
       exercisesCompleted={completed.exercises.length}
-      personalRecords={completed.personalRecords}
+      personalRecords={completed.exercises.map((e) => ({
+        exerciseName: e.exerciseName,
+        estimated1RM: e.sets.reduce((max, s) => Math.max(max, s.weight), 0),
+      }))}
       onDone={() => router.push('/')}
     />
   );

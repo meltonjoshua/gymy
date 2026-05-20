@@ -20,15 +20,23 @@ export function useWorkoutSession() {
     setIsComplete(false);
   }, []);
 
-  const completeSet = useCallback((exerciseId: string, setId: string, weight: number, reps: number) => {
-    setSessionExercises((prev) =>
-      prev.map((e) =>
-        e.id === exerciseId
-          ? { ...e, sets: e.sets.map((s) => (s.id === setId ? { ...s, weight, reps, completed: true } : s)) }
-          : e
-      )
-    );
-  }, []);
+  const completeSet = useCallback(
+    (exerciseId: string, setId: string, weight: number, reps: number) => {
+      setSessionExercises((prev) =>
+        prev.map((e) =>
+          e.id === exerciseId
+            ? {
+                ...e,
+                sets: e.sets.map((s) =>
+                  s.id === setId ? { ...s, weight, reps, completed: true } : s
+                ),
+              }
+            : e
+        )
+      );
+    },
+    []
+  );
 
   const uncompleteSet = useCallback((exerciseId: string, setId: string) => {
     setSessionExercises((prev) =>
@@ -42,7 +50,10 @@ export function useWorkoutSession() {
 
   const totalVolume = sessionExercises.reduce((sum, e) => sum + calculateVolume(e.sets), 0);
   const totalSets = sessionExercises.reduce((sum, e) => sum + e.sets.length, 0);
-  const completedSets = sessionExercises.reduce((sum, e) => sum + e.sets.filter((s) => s.completed).length, 0);
+  const completedSets = sessionExercises.reduce(
+    (sum, e) => sum + e.sets.filter((s) => s.completed).length,
+    0
+  );
   const progressPercent = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
 
   const personalRecords: PersonalRecord[] = sessionExercises
@@ -64,18 +75,26 @@ export function useWorkoutSession() {
   const completeWorkout = useCallback((): CompletedWorkout => {
     const completed: CompletedWorkout = {
       id: `cw-${Date.now()}`,
-      workoutId: '',
       name: 'Workout',
-      exercises: sessionExercises,
-      startTime,
-      endTime: new Date().toISOString(),
-      durationSeconds: startTime ? Math.round((Date.now() - new Date(startTime).getTime()) / 1000) : 0,
+      exercises: sessionExercises.map((se) => ({
+        exerciseId: se.exerciseId,
+        exerciseName: se.exerciseId,
+        sets: se.sets.map((s) => ({
+          exerciseId: s.exerciseId,
+          setNumber: s.setNumber,
+          reps: s.reps,
+          weight: s.weight,
+        })),
+      })),
       totalVolume,
-      personalRecords,
+      durationMinutes: startTime
+        ? Math.round((Date.now() - new Date(startTime).getTime()) / 60000)
+        : 0,
+      completedAt: new Date().toISOString(),
     };
     setIsComplete(true);
     return completed;
-  }, [sessionExercises, startTime, totalVolume, personalRecords]);
+  }, [sessionExercises, startTime, totalVolume]);
 
   return {
     sessionExercises,

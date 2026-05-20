@@ -7,29 +7,32 @@ import WorkoutExerciseCard from '@/components/workout/WorkoutExerciseCard';
 import WorkoutSummary from '@/components/workout/WorkoutSummary';
 import ExercisePicker from '@/components/workout/ExercisePicker';
 import { Plus, Play } from 'lucide-react';
-import { exercises } from '@/data/exercises';
 
 export default function WorkoutBuilderPage() {
   const router = useRouter();
   const {
-    workoutExercises,
     name,
     setName,
     description,
     setDescription,
+    exercises,
     addExercise,
     removeExercise,
-    updateSet,
     addSet,
     removeSet,
+    updateSetReps,
+    updateSetWeight,
+    updateRestSeconds,
+    updateNotes,
+    estimatedDuration,
+    difficulty,
+    totalSets,
     isValid,
     buildWorkout,
   } = useWorkoutBuilder();
 
   const [showPicker, setShowPicker] = useState(false);
-
-  const totalSets = workoutExercises.reduce((sum, e) => sum + e.sets.length, 0);
-  const estMinutes = totalSets * 2 + workoutExercises.reduce((sum, e) => sum + (e.sets.length - 1) * (e.restSeconds / 60), 0);
+  const addedExerciseIds = exercises.map((we) => we.exerciseId);
 
   const handleStart = () => {
     const workout = buildWorkout();
@@ -41,8 +44,8 @@ export default function WorkoutBuilderPage() {
     <div className="px-4 py-6 max-w-2xl mx-auto space-y-4">
       {showPicker && (
         <ExercisePicker
-          onSelect={(id) => addExercise(id)}
-          onClose={() => setShowPicker(false)}
+          onAddExercise={(exerciseId) => addExercise(exerciseId)}
+          addedExerciseIds={addedExerciseIds}
         />
       )}
 
@@ -68,22 +71,21 @@ export default function WorkoutBuilderPage() {
         />
       </div>
 
-      {workoutExercises.length > 0 && (
+      {exercises.length > 0 && (
         <div className="space-y-3">
-          {workoutExercises.map((we) => {
-            const ex = exercises.find((e) => e.id === we.exerciseId);
-            if (!ex) return null;
-            return (
-              <WorkoutExerciseCard
-                key={we.id}
-                exercise={we}
-                onRemove={() => removeExercise(we.id)}
-                onUpdateSet={(setId, updates) => updateSet(we.id, setId, updates)}
-                onAddSet={() => addSet(we.id)}
-                onRemoveSet={(setId) => removeSet(we.id, setId)}
-              />
-            );
-          })}
+          {exercises.map((we) => (
+            <WorkoutExerciseCard
+              key={we.id}
+              workoutExercise={we}
+              onRemove={removeExercise}
+              onAddSet={addSet}
+              onRemoveSet={removeSet}
+              onUpdateReps={updateSetReps}
+              onUpdateWeight={updateSetWeight}
+              onUpdateRest={updateRestSeconds}
+              onUpdateNotes={updateNotes}
+            />
+          ))}
         </div>
       )}
 
@@ -95,12 +97,12 @@ export default function WorkoutBuilderPage() {
         Add Exercise
       </button>
 
-      {workoutExercises.length > 0 && (
+      {exercises.length > 0 && (
         <WorkoutSummary
-          exerciseCount={workoutExercises.length}
+          exerciseCount={exercises.length}
           totalSets={totalSets}
-          estimatedMinutes={Math.round(estMinutes)}
-          difficulty="intermediate"
+          estimatedDuration={estimatedDuration}
+          difficulty={difficulty}
         />
       )}
 

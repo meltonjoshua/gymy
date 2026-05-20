@@ -169,6 +169,7 @@ export function useWorkoutHistory() {
               exerciseName: ex.exerciseName,
               weight: maxWeight,
               reps: set.reps,
+              estimated1RM: maxWeight * (1 + set.reps / 30),
               date: w.completedAt,
             });
           }

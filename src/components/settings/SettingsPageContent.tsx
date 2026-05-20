@@ -1,11 +1,16 @@
 'use client';
 
-import { ToggleSetting, SelectSetting, NumberSetting, SettingsSection } from '@/components/settings/SettingsComponents';
-import { useSettings } from '@/hooks/use-settings';
-import { UserSettings } from '@/types/settings';
+import {
+  ToggleSetting,
+  SelectSetting,
+  NumberSetting,
+  SettingsSection,
+} from '@/components/settings/SettingsComponents';
+import { useSettings, AccentColor } from '@/hooks/use-settings';
+import { UnitSystem, WeightIncrement } from '@/types/settings';
 
-export default function SettingsPage() {
-  const { settings, updateSettings } = useSettings();
+export default function SettingsPageContent() {
+  const { settings, updateSetting } = useSettings();
 
   return (
     <div className="space-y-6">
@@ -18,7 +23,7 @@ export default function SettingsPage() {
             { value: 'metric', label: 'Metric (kg)' },
             { value: 'imperial', label: 'Imperial (lbs)' },
           ]}
-          onChange={(v) => updateSettings({ unitSystem: v as UserSettings['unitSystem'] })}
+          onChange={(v) => updateSetting('unitSystem', v as UnitSystem)}
         />
       </SettingsSection>
 
@@ -26,24 +31,24 @@ export default function SettingsPage() {
         <NumberSetting
           label="Default Rest Timer"
           description="Rest timer duration in seconds"
-          value={settings.defaultRestTimer}
+          value={settings.defaultRestTimerDuration}
           min={15}
           max={300}
           step={15}
           unit="sec"
-          onChange={(v) => updateSettings({ defaultRestTimer: v })}
+          onChange={(v) => updateSetting('defaultRestTimerDuration', v)}
         />
         <ToggleSetting
           label="Auto-start Rest Timer"
           description="Automatically start rest timer after completing a set"
           value={settings.autoStartRestTimer}
-          onChange={(v) => updateSettings({ autoStartRestTimer: v })}
+          onChange={(v) => updateSetting('autoStartRestTimer', v)}
         />
         <ToggleSetting
           label="Sound Effects"
           description="Play beep sound when rest timer completes"
           value={settings.soundEffects}
-          onChange={(v) => updateSettings({ soundEffects: v })}
+          onChange={(v) => updateSetting('soundEffects', v)}
         />
       </SettingsSection>
 
@@ -56,7 +61,7 @@ export default function SettingsPage() {
           max={7}
           step={1}
           unit="days"
-          onChange={(v) => updateSettings({ weeklyWorkoutGoal: v })}
+          onChange={(v) => updateSetting('weeklyWorkoutGoal', v)}
         />
         <SelectSetting
           label="Default Weight Increment"
@@ -67,7 +72,7 @@ export default function SettingsPage() {
             { value: '5', label: '5 kg' },
             { value: '10', label: '10 kg' },
           ]}
-          onChange={(v) => updateSettings({ defaultWeightIncrement: Number(v) as 2.5 | 5 | 10 })}
+          onChange={(v) => updateSetting('defaultWeightIncrement', Number(v) as WeightIncrement)}
         />
       </SettingsSection>
 
@@ -75,14 +80,14 @@ export default function SettingsPage() {
         <SelectSetting
           label="Accent Color"
           description="Theme accent color"
-          value={settings.themeAccentColor}
+          value={settings.accentColor}
           options={[
             { value: 'emerald', label: 'Emerald' },
             { value: 'blue', label: 'Blue' },
             { value: 'orange', label: 'Orange' },
             { value: 'purple', label: 'Purple' },
           ]}
-          onChange={(v) => updateSettings({ themeAccentColor: v })}
+          onChange={(v) => updateSetting('accentColor', v as AccentColor)}
         />
       </SettingsSection>
     </div>

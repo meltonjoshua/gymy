@@ -1,7 +1,7 @@
 'use client';
 
 import SettingsPageContent from '@/components/settings/SettingsPageContent';
-import { exportAllData, importData, exportWorkoutsCSV } from '@/lib/data-export';
+import { exportAllData, importData, exportWorkoutsCsv } from '@/lib/data-export';
 import { useState } from 'react';
 
 export default function SettingsPage() {
@@ -9,7 +9,7 @@ export default function SettingsPage() {
 
   const handleExport = () => {
     const data = exportAllData();
-    const blob = new Blob([data], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -19,7 +19,7 @@ export default function SettingsPage() {
   };
 
   const handleExportCSV = () => {
-    const csv = exportWorkoutsCSV();
+    const csv = exportWorkoutsCsv();
     if (!csv) return;
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -55,24 +55,33 @@ export default function SettingsPage() {
       <SettingsPageContent />
 
       <div>
-        <h2 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-3">Data</h2>
+        <h2 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-3">
+          Data
+        </h2>
         <div className="bg-zinc-900 rounded-xl border border-zinc-800 divide-y divide-zinc-800">
-          <button onClick={handleExport} className="w-full text-left px-4 py-3 hover:bg-zinc-800 transition-colors">
+          <button
+            onClick={handleExport}
+            className="w-full text-left px-4 py-3 hover:bg-zinc-800 transition-colors"
+          >
             <div className="text-sm text-white">Export All Data</div>
             <div className="text-xs text-zinc-500">Download all Gymy data as JSON</div>
           </button>
-          <button onClick={handleExportCSV} className="w-full text-left px-4 py-3 hover:bg-zinc-800 transition-colors">
+          <button
+            onClick={handleExportCSV}
+            className="w-full text-left px-4 py-3 hover:bg-zinc-800 transition-colors"
+          >
             <div className="text-sm text-white">Export Workouts as CSV</div>
             <div className="text-xs text-zinc-500">Download workout data for spreadsheets</div>
           </button>
-          <button onClick={handleImport} className="w-full text-left px-4 py-3 hover:bg-zinc-800 transition-colors">
+          <button
+            onClick={handleImport}
+            className="w-full text-left px-4 py-3 hover:bg-zinc-800 transition-colors"
+          >
             <div className="text-sm text-white">Import Data</div>
             <div className="text-xs text-zinc-500">Restore from a JSON backup</div>
           </button>
         </div>
-        {importStatus && (
-          <p className="text-sm text-emerald-400 mt-2">{importStatus}</p>
-        )}
+        {importStatus && <p className="text-sm text-emerald-400 mt-2">{importStatus}</p>}
       </div>
     </div>
   );

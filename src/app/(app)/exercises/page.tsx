@@ -9,17 +9,24 @@ import ExerciseFilters from '@/components/exercises/ExerciseFilters';
 
 export default function ExercisesPage() {
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<ExerciseCategory | ''>('');
-  const [equipment, setEquipment] = useState<ExerciseEquipment | ''>('');
-  const [difficulty, setDifficulty] = useState<ExerciseDifficulty | ''>('');
+  const [category, setCategory] = useState<ExerciseCategory | 'all'>('all');
+  const [equipment, setEquipment] = useState<ExerciseEquipment | null>(null);
+  const [difficulty, setDifficulty] = useState<ExerciseDifficulty | null>(null);
+  const [activeMuscleGroup, setActiveMuscleGroup] = useState<string | null>(null);
 
-  const filtered = filterExercises({ category: category || undefined, equipment: equipment || undefined, difficulty: difficulty || undefined });
-  const results = search ? searchExercises(search).filter((e) => {
-    if (category && e.category !== category) return false;
-    if (equipment && e.equipment !== equipment) return false;
-    if (difficulty && e.difficulty !== difficulty) return false;
-    return true;
-  }) : filtered;
+  const filtered = filterExercises({
+    category: category === 'all' ? undefined : category,
+    equipment: equipment ?? undefined,
+    difficulty: difficulty ?? undefined,
+  });
+  const results = search
+    ? searchExercises(search).filter((e) => {
+        if (category !== 'all' && e.category !== category) return false;
+        if (equipment && e.equipment !== equipment) return false;
+        if (difficulty && e.difficulty !== difficulty) return false;
+        return true;
+      })
+    : filtered;
 
   return (
     <div className="px-4 py-6 max-w-2xl mx-auto space-y-4">
@@ -37,6 +44,8 @@ export default function ExercisesPage() {
         onCategoryChange={setCategory}
         onEquipmentChange={setEquipment}
         onDifficultyChange={setDifficulty}
+        activeMuscleGroup={activeMuscleGroup}
+        onMuscleGroupChange={setActiveMuscleGroup}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
