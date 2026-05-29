@@ -1,20 +1,17 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import Navbar from '@/components/layout/Navbar';
+import TopBar from '@/components/layout/TopBar';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "Gymy — The Best Gym App",
-  description: "Track workouts, exercises, and progress. The best gym app in the world.",
+  title: 'Gymy | The Best Gym App',
+  description: 'Your ultimate fitness companion for workouts, tracking, and progress.',
 };
 
 export default function RootLayout({
@@ -23,11 +20,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
-    >
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 font-sans">{children}</body>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <body className="min-h-full bg-gray-950 text-gray-100 flex flex-col">
+        <TopBar />
+        <main className="flex-1 pb-20 md:pb-8 overflow-x-hidden">{children}</main>
+        <Navbar />
+      </body>
     </html>
   );
 }

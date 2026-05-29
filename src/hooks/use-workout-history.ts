@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { CompletedWorkout } from '@/types/workout';
+import { useState, useCallback, useMemo } from 'react';
+import { CompletedWorkout, CompletedExercise, WeeklyStats, PersonalRecord } from '@/types/workout';
 
 const STORAGE_KEY = 'gymy_workouts';
 
-function getStoredWorkouts(): CompletedWorkout[] {
+function loadWorkouts(): CompletedWorkout[] {
   if (typeof window === 'undefined') return [];
   try {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -20,80 +20,171 @@ function saveWorkouts(workouts: CompletedWorkout[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(workouts));
 }
 
+function generateId(): string {
+  return Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+}
+
+function getStartOfWeek(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getStartOfPreviousWeek(date: Date): Date {
+  const start = getStartOfWeek(date);
+  start.setDate(start.getDate() - 7);
+  return start;
+}
+
+function filterWorkoutsByDateRange(
+  workouts: CompletedWorkout[],
+  start: Date,
+  end: Date
+): CompletedWorkout[] {
+  return workouts.filter((w) => {
+    const d = new Date(w.completedAt);
+    return d >= start && d <= end;
+  });
+}
+
 export function useWorkoutHistory() {
-  const [workouts, setWorkouts] = useState<CompletedWorkout[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [workouts, setWorkouts] = useState<CompletedWorkout[]>(loadWorkouts);
 
-  if (!loaded && typeof window !== 'undefined') {
-    setWorkouts(getStoredWorkouts());
-    setLoaded(true);
-  }
+  const addWorkout = useCallback(
+    (workout: {
+      name: string;
+      exercises: {
+        exerciseId: string;
+        exerciseName: string;
+        sets: { reps: number; weight: number }[];
+      }[];
+      durationMinutes: number;
+    }) => {
+      const completedExercises: CompletedExercise[] = workout.exercises.map((e) => ({
+        exerciseId: e.exerciseId,
+        exerciseName: e.exerciseName,
+        sets: e.sets.map((s, i) => ({
+          exerciseId: e.exerciseId,
+          setNumber: i + 1,
+          reps: s.reps,
+          weight: s.weight,
+        })),
+      }));
 
-  const addWorkout = useCallback((workout: CompletedWorkout) => {
+      const totalVolume = completedExercises.reduce(
+        (sum, ex) => sum + ex.sets.reduce((s, set) => s + set.reps * set.weight, 0),
+        0
+      );
+
+      const completed: CompletedWorkout = {
+        id: generateId(),
+        name: workout.name,
+        exercises: completedExercises,
+        totalVolume,
+        durationMinutes: workout.durationMinutes,
+        completedAt: new Date().toISOString(),
+      };
+
+      setWorkouts((prev) => {
+        const updated = [completed, ...prev];
+        saveWorkouts(updated);
+        return updated;
+      });
+    },
+    []
+  );
+
+  const deleteWorkout = useCallback((id: string) => {
     setWorkouts((prev) => {
-      const updated = [workout, ...prev];
+      const updated = prev.filter((w) => w.id !== id);
       saveWorkouts(updated);
       return updated;
     });
   }, []);
 
-  const getWorkoutsByDateRange = useCallback((start: string, end: string) => {
-    return workouts.filter((w) => w.startTime >= start && w.startTime <= end);
-  }, [workouts]);
-
-  const getWeeklyStats = useCallback(() => {
+  const weeklyStats = useMemo((): WeeklyStats => {
     const now = new Date();
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay());
-    weekStart.setHours(0, 0, 0, 0);
-    const weekStr = weekStart.toISOString();
-    const weekWorkouts = workouts.filter((w) => w.startTime >= weekStr);
+    const thisWeekStart = getStartOfWeek(now);
+    const thisWeekEnd = new Date(thisWeekStart);
+    thisWeekEnd.setDate(thisWeekEnd.getDate() + 7);
+
+    const prevWeekStart = getStartOfPreviousWeek(now);
+    const prevWeekEnd = new Date(prevWeekStart);
+    prevWeekEnd.setDate(prevWeekEnd.getDate() + 7);
+
+    const thisWeekWorkouts = filterWorkoutsByDateRange(workouts, thisWeekStart, thisWeekEnd);
+    const prevWeekWorkouts = filterWorkoutsByDateRange(workouts, prevWeekStart, prevWeekEnd);
+
     return {
-      totalVolume: weekWorkouts.reduce((sum, w) => sum + w.totalVolume, 0),
-      workoutsCompleted: weekWorkouts.length,
-      totalTimeMinutes: Math.round(weekWorkouts.reduce((sum, w) => sum + w.durationSeconds, 0) / 60),
+      totalVolume: thisWeekWorkouts.reduce((sum, w) => sum + w.totalVolume, 0),
+      workoutsCompleted: thisWeekWorkouts.length,
+      totalMinutes: thisWeekWorkouts.reduce((sum, w) => sum + w.durationMinutes, 0),
+      previousVolume: prevWeekWorkouts.reduce((sum, w) => sum + w.totalVolume, 0),
+      previousWorkouts: prevWeekWorkouts.length,
     };
   }, [workouts]);
 
-  const getCurrentStreak = useCallback(() => {
+  const currentStreak = useMemo((): number => {
     if (workouts.length === 0) return 0;
-    const dates = [...new Set(workouts.map((w) => w.startTime.split('T')[0]))].sort().reverse();
+
+    const workoutDates = new Set<string>();
+    workouts.forEach((w) => {
+      const d = new Date(w.completedAt);
+      workoutDates.add(d.toISOString().split('T')[0]!);
+    });
+
     let streak = 0;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const checkDate = new Date(today);
-    for (let i = 0; i < 365; i++) {
-      const dateStr = checkDate.toISOString().split('T')[0];
-      if (dates.includes(dateStr)) {
-        streak++;
-      } else if (i === 0) {
-        checkDate.setDate(checkDate.getDate() - 1);
-        continue;
-      } else {
-        break;
-      }
+
+    if (!workoutDates.has(checkDate.toISOString().split('T')[0]!)) {
       checkDate.setDate(checkDate.getDate() - 1);
     }
+
+    while (workoutDates.has(checkDate.toISOString().split('T')[0]!)) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+
     return streak;
   }, [workouts]);
 
-  const getPersonalRecords = useCallback(() => {
-    const allPRs = workouts.flatMap((w) => w.personalRecords);
-    const bestByExercise = new Map<string, CompletedWorkout['personalRecords'][0]>();
-    allPRs.forEach((pr) => {
-      const existing = bestByExercise.get(pr.exerciseId);
-      if (!existing || pr.estimated1RM > existing.estimated1RM) {
-        bestByExercise.set(pr.exerciseId, pr);
-      }
+  const personalRecords = useMemo((): PersonalRecord[] => {
+    const prMap = new Map<string, PersonalRecord>();
+
+    workouts.forEach((w) => {
+      w.exercises.forEach((ex) => {
+        ex.sets.forEach((set) => {
+          const key = ex.exerciseId;
+          const current = prMap.get(key);
+          const maxWeight = set.weight;
+          if (!current || maxWeight > current.weight) {
+            prMap.set(key, {
+              exerciseId: ex.exerciseId,
+              exerciseName: ex.exerciseName,
+              weight: maxWeight,
+              reps: set.reps,
+              date: w.completedAt,
+            });
+          }
+        });
+      });
     });
-    return Array.from(bestByExercise.values());
+
+    return Array.from(prMap.values()).sort((a, b) => b.weight - a.weight);
   }, [workouts]);
 
   return {
     workouts,
     addWorkout,
-    getWorkoutsByDateRange,
-    getWeeklyStats,
-    getCurrentStreak,
-    getPersonalRecords,
+    deleteWorkout,
+    weeklyStats,
+    currentStreak,
+    personalRecords,
   };
 }

@@ -1,19 +1,32 @@
 'use client';
 
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-950 p-6 text-center">
-      <div className="text-6xl mb-4">🏋️</div>
-      <h1 className="text-4xl font-bold text-white mb-2">404</h1>
-      <p className="text-zinc-400 mb-6">This page must have skipped leg day.</p>
-      <Link
-        href="/"
-        className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-colors"
+    <div className="page-container flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
       >
-        Go Home
-      </Link>
+        <div className="text-8xl font-black bg-gradient-to-r from-emerald-400 to-orange-400 bg-clip-text text-transparent mb-4">
+          404
+        </div>
+        <h2 className="text-xl font-bold text-gray-100 mb-2">Page not found</h2>
+        <p className="text-gray-500 text-sm mb-8 max-w-sm">
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <Link href="/" className="btn-primary">
+            Go Home
+          </Link>
+          <Link href="/exercises" className="btn-secondary">
+            Browse Exercises
+          </Link>
+        </div>
+      </motion.div>
     </div>
   );
 }

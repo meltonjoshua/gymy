@@ -1,44 +1,82 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { UserSettings, defaultSettings } from '@/types/settings';
+import { useSyncExternalStore, useCallback } from 'react';
+
+export type UnitSystem = 'metric' | 'imperial';
+export type WeightIncrement = 2.5 | 5 | 10;
+export type AccentColor = 'emerald' | 'blue' | 'purple' | 'orange' | 'pink' | 'cyan';
+
+export interface Settings {
+  unitSystem: UnitSystem;
+  defaultRestTimerDuration: number;
+  weeklyWorkoutGoal: number;
+  defaultWeightIncrement: WeightIncrement;
+  soundEffects: boolean;
+  autoStartRestTimer: boolean;
+  accentColor: AccentColor;
+  notifications: boolean;
+}
 
 const STORAGE_KEY = 'gymy_settings';
 
-function loadSettings(): UserSettings {
-  if (typeof window === 'undefined') return defaultSettings;
+const DEFAULT_SETTINGS: Settings = {
+  unitSystem: 'metric',
+  defaultRestTimerDuration: 90,
+  weeklyWorkoutGoal: 4,
+  defaultWeightIncrement: 2.5,
+  soundEffects: true,
+  autoStartRestTimer: false,
+  accentColor: 'emerald',
+  notifications: true,
+};
+
+let listeners: Array<() => void> = [];
+
+function emitChange() {
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
+function subscribe(listener: () => void) {
+  listeners = [...listeners, listener];
+  return () => {
+    listeners = listeners.filter((l) => l !== listener);
+  };
+}
+
+function getSnapshot(): string {
+  return localStorage.getItem(STORAGE_KEY) ?? JSON.stringify(DEFAULT_SETTINGS);
+}
+
+function getServerSnapshot(): string {
+  return JSON.stringify(DEFAULT_SETTINGS);
+}
+
+function parseSettings(raw: string): Settings {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return { ...defaultSettings, ...JSON.parse(stored) };
-  } catch {}
-  return defaultSettings;
+    const parsed = JSON.parse(raw) as Partial<Settings>;
+    return { ...DEFAULT_SETTINGS, ...parsed };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
 }
 
 export function useSettings() {
-  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
-  const [loaded, setLoaded] = useState(false);
+  const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const settings = parseSettings(raw);
 
-  if (!loaded && typeof window !== 'undefined') {
-    setSettings(loadSettings());
-    setLoaded(true);
-  }
-
-  const updateSettings = useCallback((updates: Partial<UserSettings>) => {
-    setSettings((prev) => {
-      const next = { ...prev, ...updates };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      }
-      return next;
-    });
+  const updateSetting = useCallback(<K extends keyof Settings>(key: K, value: Settings[K]) => {
+    const current = parseSettings(localStorage.getItem(STORAGE_KEY) ?? '');
+    const updated = { ...current, [key]: value };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    emitChange();
   }, []);
 
   const resetSettings = useCallback(() => {
-    setSettings(defaultSettings);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultSettings));
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_SETTINGS));
+    emitChange();
   }, []);
 
-  return { settings, updateSettings, resetSettings, loaded };
+  return { settings, updateSetting, resetSettings, loaded: true };
 }

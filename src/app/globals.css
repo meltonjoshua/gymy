@@ -1,41 +1,192 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #0a0a0a;
+  --background: #0c0a09;
   --foreground: #ededed;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@layer base {
+  :root {
+    --background: #0c0a09;
+    --foreground: #ededed;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
+@utility scrollbar-thin {
+  scrollbar-width: thin;
 }
 
-* {
-  -webkit-tap-highlight-color: transparent;
+@utility scrollbar-track-slate-800 {
+  scrollbar-color: #475569 #1e293b;
 }
 
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+@utility card {
+  border-radius: 1rem;
+  background-color: color-mix(in srgb, white 3%, transparent);
+  backdrop-filter: blur(24px);
+  border: 1px solid color-mix(in srgb, white 6%, transparent);
+  padding: 1.25rem;
 }
 
-input[type="number"] {
-  -moz-appearance: textfield;
+@utility card-hover {
+  border-radius: 1rem;
+  background-color: color-mix(in srgb, white 3%, transparent);
+  backdrop-filter: blur(24px);
+  border: 1px solid color-mix(in srgb, white 6%, transparent);
+  padding: 1.25rem;
+  transition: all 0.2s;
+  &:hover {
+    border-color: color-mix(in srgb, #10b981 30%, transparent);
+    background-color: color-mix(in srgb, white 5%, transparent);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  }
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+@utility btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(to right, #059669, #10b981);
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.15s;
+  min-height: 44px;
+  &:hover {
+    background: linear-gradient(to right, #10b981, #34d399);
+  }
+  &:active {
+    transform: scale(0.97);
+  }
+  box-shadow: 0 10px 15px -3px rgb(16 185 129 / 0.2);
 }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+@utility btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background-color: color-mix(in srgb, white 6%, transparent);
+  border: 1px solid color-mix(in srgb, white 8%, transparent);
+  color: #d1d5db;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.15s;
+  min-height: 44px;
+  &:hover {
+    background-color: color-mix(in srgb, white 10%, transparent);
+  }
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+@utility btn-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.15s;
+  min-height: 44px;
+  &:hover {
+    background-color: color-mix(in srgb, white 6%, transparent);
+    color: #d1d5db;
+  }
+}
+
+@utility section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #d1d5db;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@utility page-container {
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+@utility safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility animate-pulse-rest {
+  animation: pulse-rest 1.5s ease-in-out infinite;
+}
+
+@utility animate-checkmark {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: checkmark-draw 0.4s ease-out forwards;
+}
+
+@keyframes pulse-rest {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.8;
+  }
+}
+
+@keyframes checkmark-draw {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
 }

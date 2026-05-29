@@ -1,30 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { Settings } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 
 export default function TopBar() {
   return (
-    <header className="sticky top-0 z-40 bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800">
-      <div className="flex items-center justify-between px-4 h-14">
+    <header className="sticky top-0 z-40 bg-gray-950/90 backdrop-blur-xl border-b border-white/[0.06]">
+      <div className="max-w-3xl mx-auto flex items-center justify-between h-14 px-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">G</span>
-          </div>
-          <span className="text-lg font-bold text-white">Gymy</span>
+          <span className="text-xl font-black tracking-tight">
+            <span className="bg-gradient-to-r from-emerald-400 to-orange-400 bg-clip-text text-transparent">
+              Gymy
+            </span>
+          </span>
         </Link>
+
         <div className="flex items-center gap-2">
           <Link
             href="/workout/builder"
-            className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center justify-center w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25 transition-colors min-w-[44px] min-h-[44px] md:w-auto md:h-auto md:px-3 md:py-2 md:gap-1.5 md:text-sm md:font-medium"
           >
-            Start Workout
+            <Plus className="w-4 h-4" />
+            <span className="hidden md:inline">Workout</span>
           </Link>
           <Link
             href="/settings"
-            className="p-2 text-zinc-400 hover:text-white transition-colors"
+            className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/[0.04] text-gray-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-gray-300 transition-colors min-w-[44px] min-h-[44px]"
           >
-            <Settings className="w-5 h-5" />
+            <Settings className="w-4 h-4" />
           </Link>
         </div>
       </div>
